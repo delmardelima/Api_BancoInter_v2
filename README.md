@@ -1,6 +1,7 @@
 # Consumo da API Banco Inter v2
 Um exemplo em Delphi para consumo da API do Banco Inter v2 com autenticação OAUTH 2.0
 ## Documentação
+====================
 Neste projeto é apresentado como consumir a API Banco Inter v2, usando a IDE Delphi VCL e o componente Indy.
 Compatibilidade testada na versão do Delphi Rio, mas poderá funcionar em versão diferente.
 
@@ -19,117 +20,79 @@ Apresentado por Delmar de Lima (Cortes DEV).
 | grant_type*                | string          | GrantType que utilizamos, o default é (client_credentials)        |
 | scope*                     | string          | Escopos cadastrados na tela de aplicações.                        |
 
-Escopos disponíveis:
-====================
-extrato.read - Consulta de Extrato e Saldo
-boleto-cobranca.read - Consulta de boletos e exportação para PDF
-boleto-cobranca.write - Emissão e cancelamento de boletos
+Escopos disponíveis: <br/>
+extrato.read - Consulta de Extrato e Saldo <br/>
+boleto-cobranca.read - Consulta de boletos e exportação para PDF <br/>
+boleto-cobranca.write - Emissão e cancelamento de boletos <br/>
 
 ### Extrato
 #### Consultar extrato
-Metodo GET
-https://cdpj.partners.bancointer.com.br/banking/v2/extrato
-QUERY PARAMS
-dataInicio* string
-Data início da consulta de extrato.
-Formato: YYYY-MM-DD
+| Metodo                     | Link                                                         | Tipo                 |
+| -------------------------- | ------------------------------------------------------------ | -------------------- |
+| GET                        | https://cdpj.partners.bancointer.com.br/banking/v2/extrato   | QUERY PARAMS         |
 
-dataFim* string
-Data fim da consulta de extrato.
-Formato: YYYY-MM-DD
+
+| Parametro                  | Tipo            | Observação                                                        |
+| -------------------------- | --------------- | ----------------------------------------------------------------- |
+| dataInicio*                | string          | Data início da consulta de extrato. Formato: YYYY-MM-DD           |
+| dataFim*                   | string          | Data fim da consulta de extrato. Formato: YYYY-MM-DD              |
 
 ### Saldo
 #### Consultar saldo
-Metodo GET
-https://cdpj.partners.bancointer.com.br/banking/v2/saldo
-QUERY PARAMS
-dataSaldo string
-Data de consulta para o saldo posicional.
-Formato: YYYY-MM-DD
-OBS: Caso não seja informada, leva-se em consideração a data atual, assim, o retorno será o saldo atual.
+| Metodo                     | Link                                                         | Tipo                 |
+| -------------------------- | ------------------------------------------------------------ | -------------------- |
+| GET                        | https://cdpj.partners.bancointer.com.br/banking/v2/saldo     | QUERY PARAMS         |
+
+
+| Parametro                  | Tipo            | Observação                                                        |
+| -------------------------- | --------------- | ----------------------------------------------------------------- |
+| dataSaldo                  | string          | Data de consulta para o saldo posicional. Formato: YYYY-MM-DD     |
+
+OBS: Caso *dataSaldo* não seja informada, leva-se em consideração a data atual, assim, o retorno será o saldo atual.
 
 ### Boletos
 #### Incluir boleto de cobrança
-Método utilizado para incluir/emitir um novo boleto registrado.
-O boleto incluído estará disponível para consulta e pagamento, após um tempo apróximado de 5 minutos da sua inclusão. Esse tempo é necessário para o registro do boleto na CIP.
-Metodo POST
-https://cdpj.partners.bancointer.com.br/cobranca/v2/boletos
-BODY PARAMS
-seuNumero* string
-Campo Seu Número do título
+Método utilizado para incluir/emitir um novo boleto registrado.<br/>
+O boleto incluído estará disponível para consulta e pagamento, após um tempo apróximado de 5 minutos da sua inclusão. Esse tempo é necessário para o registro do boleto na CIP.<br/>
+| Metodo                     | Link                                                         | Tipo                 |
+| -------------------------- | ------------------------------------------------------------ | -------------------- |
+| POST                       | https://cdpj.partners.bancointer.com.br/cobranca/v2/boletos  | BODY PARAMS          |
 
-valorNominal* float
-Valor Nominal do título
 
-valorAbatimento float
-Valor de abatimento do título, expresso na mesma moeda do Valor Nominal
+| Parametro                  | Tipo            | Observação                                                              |
+| -------------------------- | --------------- | ----------------------------------------------------------------------- |
+| seuNumero*                 | string          | Campo Seu Número do título                                              |
+| valorNominal*              | float           | Valor Nominal do título                                                 |
+| valorAbatimento            | float           | Valor de abatimento do título, expresso na mesma moeda do Valor Nominal |
+| dataVencimento*            | string          | Data de vencimento do título. Formato aceito: YYYY-MM-DD                |
+| numDiasAgenda*             | int32           | Número de dias corridos para o cancelamento do boleto. (de 0 até 60)    |
+| pagador*                   | object          | Dados do pagador                                                        |
+| mensagem                   | object          | Mensagem de instrução de pagamento                                      |
+| desconto1                  | object          | Tipo de desconto de pagamento                                           |
+| multa                      | object          | Multa por falta de pagamento                                            |
+| mora                       | object          | Mora por falta de pagmento                                              |
 
-dataVencimento* string
-Data de vencimento do título
-Formato aceito: YYYY-MM-DD
+##### Object Pagador
+| Parametro                  | Tipo            | Observação                                                              |
+| -------------------------- | --------------- | ----------------------------------------------------------------------- |
+| cpfCnpj*                   | string          | CPF/CNPJ do pagador do título                                           |
+| tipoPessoa*                | string          | Tipo do pagador: FISICA - Pessoa Física / JURIDICA - Pessoa Jurídica    |
+| nome*                      | string          | Nome do pagador                                                         |
+| endereco*                  | string          | Endereço do pagador                                                     |
+| numero                     | string          | Número no logradouro do pagador                                         |
+| complemento                | string          | Complemento do endereço do pagador                                      |
+| bairro                     | string          | Bairro do pagador                                                       |
+| cidade*                    | string          | Cidade do pagador                                                       |
+| uf*                        | string          | UF do pagador                                                           |
+| cep*                       | string          | CEP do pagador                                                          |
+| email                      | string          | E-mail do pagador                                                       |
+| ddd                        | string          | DDD do telefone do pagador                                              |
+| telefone                   | string          | Telefone do pagador                                                     |
 
-numDiasAgenda* int32
-Número de dias corridos após o vencimento para o cancelamento efetivo automático do boleto. (de 0 até 60)
-
-pagador* object
-{
-cpfCnpj* string
-CPF/CNPJ do pagador do título
-
-tipoPessoa* string
-Tipo do pagador: FISICA - Pessoa Física / JURIDICA - Pessoa Jurídica
-
-nome* string
-Nome do pagador
-
-endereco* string
-Endereço do pagador
-
-numero string
-Número no logradouro do pagador
-
-complemento string
-Complemento do endereço do pagador
-
-bairro string
-Bairro do pagador
-
-cidade* string
-Cidade do pagador
-
-uf* string
-UF do pagador
-
-cep* string
-CEP do pagador
-
-email string
-E-mail do pagador
-
-ddd string
-DDD do telefone do pagador
-
-telefone string
-Telefone do pagador
-} 
-
-mensagem object
-{
-linha1 string
-Linha 1 do campo de texto do título
-
-linha2 string
-Linha 2 do campo de texto do título
-
-linha3 string
-Linha 3 do campo de texto do título
-
-linha4 string
-Linha 4 do campo de texto do título
-
-linha5 string
-Linha 5 do campo de texto do título
-}
+##### Object Mensagem
+| Parametro                  | Tipo            | Observação                                                              |
+| -------------------------- | --------------- | ----------------------------------------------------------------------- |
+| linha1                     | string          | Linha 1 do campo de texto do título. Até a Linha 5                      |
 
 desconto1 object
 {
