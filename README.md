@@ -7,21 +7,20 @@ Compatibilidade testada na versão do Delphi Rio, mas poderá funcionar em vers�
 Apresentado por Delmar de Lima (Cortes DEV).
 ### Token
 #### Obter token oAuth
-Metodo POST
-https://cdpj.partners.bancointer.com.br/oauth/v2/token
-FORM DATA
-client_id* string
-Client Id obtido no detalhe da tela de aplicações no IB
+| Metodo                     | Link                                                         | Tipo                 |
+| -------------------------- | ------------------------------------------------------------ | -------------------- |
+| POST                       | https://cdpj.partners.bancointer.com.br/oauth/v2/token       | FORM DATA            |
 
-client_secret* string
-Client Secret obtido no detalhe da tela de aplicações no IB
 
-grant_type* string
-GrantType que utilizamos, o default é (client_credentials)
+| Parametro                  | Tipo            | Observação                                                        |
+| -------------------------- | --------------- | ----------------------------------------------------------------- |
+| client_id*                 | string          | obtido no detalhe da tela de aplicações no IB                     |
+| client_secret*             | string          | obtido no detalhe da tela de aplicações no IB                     |
+| grant_type*                | string          | GrantType que utilizamos, o default é (client_credentials)        |
+| scope*                     | string          | Escopos cadastrados na tela de aplicações.                        |
 
-scope* string
-Escopos cadastrados na tela de aplicações. OBS: No caso de precisar adicionar mais de um escopo, os escopos devem ser separados com espaço (extrato.read boleto-cobranca.read)
 Escopos disponíveis:
+====================
 extrato.read - Consulta de Extrato e Saldo
 boleto-cobranca.read - Consulta de boletos e exportação para PDF
 boleto-cobranca.write - Emissão e cancelamento de boletos
@@ -233,3 +232,6 @@ Sinta-se à vontade para fazer perguntas através do WhatsApp: https://wa.me/559
 GNU General Public License v3.0 [GNU General][].
 
 [GNU General]: https://raw.githubusercontent.com/delmardelima/Api_BancoInter_v2/main/LICENSE
+
+Conheça mais no nosso blog: <br/>
+**[>> CONHEÇA MAIS](https://www.amil.cnt.br/blog)**
