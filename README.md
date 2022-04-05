@@ -1,4 +1,4 @@
-# Consumo da API Banco Inter com autenticação OAUTH 2.0
+# Consumo da API Banco Inter v2
 Um exemplo em Delphi para consumo da API do Banco Inter v2 com autenticação OAUTH 2.0
 ## Documentação
 Neste projeto é apresentado como consumir a API Banco Inter v2, usando a IDE Delphi VCL e o componente Indy.
