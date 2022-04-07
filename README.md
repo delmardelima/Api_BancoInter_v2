@@ -1,11 +1,12 @@
 # Consumo da API Banco Inter v2
 Um exemplo em Delphi para consumo da API do Banco Inter v2 com autenticação OAUTH 2.0
-## Documentação
-====================
+## Documentação 
 Neste projeto é apresentado como consumir a API Banco Inter v2, usando a IDE Delphi VCL e o componente Indy.
 Compatibilidade testada na versão do Delphi Rio, mas poderá funcionar em versão diferente.
 
 Apresentado por Delmar de Lima (Cortes DEV).
+
+##### OBS: Parametro em aterisco "*" é obrigadorio ser informado. <br/>
 ### Token
 #### Obter token oAuth
 | Metodo                     | Link                                                         | Tipo                 |
@@ -94,86 +95,72 @@ O boleto incluído estará disponível para consulta e pagamento, após um tempo
 | -------------------------- | --------------- | ----------------------------------------------------------------------- |
 | linha1                     | string          | Linha 1 do campo de texto do título. Até a Linha 5                      |
 
-desconto1 object
-{
-codigoDesconto* string
-Código de Desconto do título.
-NAOTEMDESCONTO - Não tem desconto.
-VALORFIXODATAINFORMADA - Valor fixo até a data informada.
-PERCENTUALDATAINFORMADA - Percentual até a data informada.
-VALORANTECIPACAODIACORRIDO - Valor por antecipação dia corrido.
-VALORANTECIPACAODIAUTIL - Valor por antecipação dia útil.
-PERCENTUALVALORNOMINALDIACORRIDO - Percentual sobre o valor nominal dia corrido.
-PERCENTUALVALORNOMINALDIAUTIL - Percentual sobre o valor nominal dia útil.
-PERCENTUALVALORNOMINALDIAUTIL
+##### Object Desconto1
+| Parametro                  | Tipo            | Observação                                                              |
+| -------------------------- | --------------- | ----------------------------------------------------------------------- |
+| codigoDesconto*            | string          | Código de Desconto do título.                                           |
+| data                       | string          | Data de Desconto do título. Formato aceito: YYYY-MM-DD                  |
+| taxa                       | float           | Taxa Percentual de Desconto do título.                                  |
+| valor                      | float           | Valor de Desconto, expresso na moeda do título.                         |
 
-data string
-Data de Desconto do título.
-Obrigatório para códigos de desconto VALORFIXODATAINFORMADA e PERCENTUALDATAINFORMADA. Não informar para os demais
-Formato aceito: YYYY-MM-DD
+Código de Desconto disponíveis: <br/>
+NAOTEMDESCONTO - Não tem desconto.  <br/>
+VALORFIXODATAINFORMADA - Valor fixo até a data informada. <br/>
+PERCENTUALDATAINFORMADA - Percentual até a data informada. <br/>
+VALORANTECIPACAODIACORRIDO - Valor por antecipação dia corrido. <br/>
+VALORANTECIPACAODIAUTIL - Valor por antecipação dia útil. <br/>
+PERCENTUALVALORNOMINALDIACORRIDO - Percentual sobre o valor nominal dia corrido. <br/>
+PERCENTUALVALORNOMINALDIAUTIL - Percentual sobre o valor nominal dia útil. <br/>
 
-taxa float
-Taxa Percentual de Desconto do título.
-Obrigatório para códigos de desconto PERCENTUALDATAINFORMADA, PERCENTUALVALORNOMINALDIACORRIDO e PERCENTUALVALORNOMINALDIAUTIL
+OBS: *data* obrigatória para códigos de desconto VALORFIXODATAINFORMADA e PERCENTUALDATAINFORMADA. Não informar para os demais <br/>
+OBS: *taxa* obrigatória para códigos de desconto PERCENTUALDATAINFORMADA, PERCENTUALVALORNOMINALDIACORRIDO e PERCENTUALVALORNOMINALDIAUTIL <br/>
+OBS: *valor* obrigatória para códigos de desconto VALORFIXODATAINFORMADA, VALORANTECIPACAODIACORRIDO e VALORANTECIPACAODIAUTIL <br/>
 
-valor float
-Valor de Desconto, expresso na moeda do título.
-Obrigatório para códigos de desconto VALORFIXODATAINFORMADA, VALORANTECIPACAODIACORRIDO e VALORANTECIPACAODIAUTIL
-}
+##### Object Multa
+| Parametro                  | Tipo            | Observação                                                              |
+| -------------------------- | --------------- | ----------------------------------------------------------------------- |
+| codigoMulta*               | string          | Código de Multa do título.                                              |
+| data                       | string          | Data da Multa do título. Formato aceito: YYYY-MM-DD                     |
+| taxa                       | float           | Taxa Percentual de Multa do título.                                     |
+| valor                      | float           | Valor de Multa, expresso na moeda do título.                            |
 
-multa object
-{
-codigoMulta* string
-Código de Multa do título.
-NAOTEMMULTA - Não tem multa
-VALORFIXO – Valor fixo
-PERCENTUAL - Percentual
-VALORFIXO
+Código de Multa disponíveis: <br/>
+NAOTEMMULTA - Não tem multa <br/>
+VALORFIXO – Valor fixo <br/>
+PERCENTUAL - Percentual <br/>
 
-data string
-Data da Multa do título.
-Obrigatório se informado código de multa VALORFIXO ou PERCENTUAL.
-Deve ser maior que o vencimento e marca a data de início de cobrança de multa (incluindo essa data)
-Formato aceito: YYYY-MM-DD
+OBS: *data* obrigatória se informado código de multa VALORFIXO ou PERCENTUAL. <br/>
+Deve ser maior que o vencimento e marca a data de início de cobrança de multa (incluindo essa data) <br/>
 
-taxa float
-Taxa Percentual de Multa do título. Obrigatória se informado código de multa PERCENTUAL
-Deve ser 0 para código de multa NAOTEMMULTA
+OBS: *taxa* obrigatória se informado código de multa PERCENTUAL <br/>
+Deve ser 0 para código de multa NAOTEMMULTA <br/>
 
-valor float
-Valor de Multa expresso na moeda do título.
-Obrigatório se informado código de multa VALORFIXO
-Deve ser 0 para código de multa NAOTEMMULTA
-}
+OBS: *valor* obrigatório se informado código de multa VALORFIXO <br/>
+Deve ser 0 para código de multa NAOTEMMULTA <br/>
 
-mora object
-{
-codigoMora* string
-Código de Mora do título.
-VALORDIA - Valor ao dia
-TAXAMENSAL - Taxa mensal
-ISENTO - Isento
-CONTROLEDOBANCO - Controle do banco
-ISENTO
+##### Object Mora
+| Parametro                  | Tipo            | Observação                                                              |
+| -------------------------- | --------------- | ----------------------------------------------------------------------- |
+| codigoMora*                | string          | Código de Mora do título.                                              |
+| data                       | string          | Data da Mora do título. Formato aceito: YYYY-MM-DD                     |
+| taxa                       | float           | Taxa Percentual de Mora do título.                                     |
+| valor                      | float           | Valor de Mora, expresso na moeda do título.                            |
 
-data string
-Data da Mora do título.
-Obrigatório se informado código de mora VALORDIA, TAXAMENSAL ou CONTROLEDOBANCO.
-Deve ser maior que o vencimento e marca a data de início de cobrança de mora (incluindo essa data)
-Formato aceito: YYYY-MM-DD
+Código de Mora disponíveis: <br/>
+VALORDIA - Valor ao dia <br/>
+TAXAMENSAL - Taxa mensal <br/>
+ISENTO - Isento <br/>
+CONTROLEDOBANCO - Controle do banco <br/>
 
-taxa float
-Percentual de Mora do título.
-Obrigatória se informado código de mora TAXAMENSAL
+OBS: *data* obrigatório se informado código de mora VALORDIA, TAXAMENSAL ou CONTROLEDOBANCO. <br/>
+Deve ser maior que o vencimento e marca a data de início de cobrança de mora (incluindo essa data) <br/>
 
-valor float
-Valor de Mora expresso na moeda do título.
-Obrigatório se informado código de mora TAXAMENSAL
-Deve ser 0 para código de mora ISENTO
-}
+OBS: *taxa* obrigatória se informado código de mora TAXAMENSAL <br/>
+
+OBS: *valor* obrigatório se informado código de mora TAXAMENSAL <br/>
+Deve ser 0 para código de mora ISENTO <br/>
 
 ## Exemplos
-
 
 ## Suporte
 Sinta-se à vontade para fazer perguntas através do WhatsApp: https://wa.me/5597991442486
@@ -184,17 +171,23 @@ Sinta-se à vontade para fazer perguntas através do WhatsApp: https://wa.me/559
 #### Celular: (97) 99144-2486
 
 ## Conheça
-### YouTube: https://bit.ly/SeguirCortesDev
-### WhatsApp: https://wa.me/5597991442486
-### Instagram: https://www.instagram.com/cortesdevoficial/
-### Facebook: https://www.fb.com/cortesdevoficial
-### Layout Moderno em Delphi: https://bit.ly/LayoutModerno
-### Site: https://amil.cnt.br/
+##### [YouTube][]. 
+##### [WhatsApp][].
+##### [Instagram][].
+##### [Facebook][]. 
+##### [Layout Moderno em Delphi][].
+##### [Site][]. <br/>
+
+Conheça mais no nosso blog: <br/>
+**[>> CONHEÇA MAIS](https://www.amil.cnt.br/blog)**
 
 ## Licença
 GNU General Public License v3.0 [GNU General][].
 
 [GNU General]: https://raw.githubusercontent.com/delmardelima/Api_BancoInter_v2/main/LICENSE
-
-Conheça mais no nosso blog: <br/>
-**[>> CONHEÇA MAIS](https://www.amil.cnt.br/blog)**
+[YouTube]: https://bit.ly/SeguirCortesDev
+[WhatsApp]: https://wa.me/5597991442486
+[Instagram]: https://www.instagram.com/cortesdevoficial/
+[Facebook]: https://www.fb.com/cortesdevoficial
+[Layout Moderno em Delphi]: https://bit.ly/LayoutModerno
+[Site]: https://amil.cnt.br/
