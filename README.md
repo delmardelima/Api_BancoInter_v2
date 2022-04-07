@@ -6,7 +6,6 @@ Compatibilidade testada na versão do Delphi Rio, mas poderá funcionar em vers�
 
 Apresentado por Delmar de Lima (Cortes DEV).
 
-##### OBS: Parametro em aterisco "*" é obrigadorio ser informado. <br/>
 ### Token
 #### Obter token oAuth
 | Metodo                     | Link                                                         | Tipo                 |
@@ -25,6 +24,8 @@ Escopos disponíveis: <br/>
 extrato.read - Consulta de Extrato e Saldo <br/>
 boleto-cobranca.read - Consulta de boletos e exportação para PDF <br/>
 boleto-cobranca.write - Emissão e cancelamento de boletos <br/>
+
+##### OBS: Parametro em asterisco "*" é obrigatorio. <br/>
 
 ### Extrato
 #### Consultar extrato
