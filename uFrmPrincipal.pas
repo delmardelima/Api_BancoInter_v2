@@ -55,6 +55,7 @@ type
     procedure btnGetTokenClick(Sender: TObject);
     procedure sbCertFileClick(Sender: TObject);
     procedure sbKeyFileClick(Sender: TObject);
+    procedure sbSalvarClick(Sender: TObject);
   private
     function GetToken: String;
     function PostBoleto(aToken: String): Boolean;
@@ -80,7 +81,7 @@ Const
   // Link conforme documentação
   URI_TOKEN = 'https://cdpj.partners.bancointer.com.br/oauth/v2/token';
   URI_BOLETOS = 'https://cdpj.partners.bancointer.com.br/cobranca/v2/boletos';
-
+  //
 implementation
 
 {$R *.dfm}
@@ -287,6 +288,11 @@ begin
   finally
     openDialog.Free;
   end;
+end;
+
+procedure TFrmPrincipal.sbSalvarClick(Sender: TObject);
+begin
+  ShowMessage('');
 end;
 
 procedure TFrmPrincipal.btnGetTokenClick(Sender: TObject);

@@ -202,6 +202,7 @@ object FrmPrincipal: TFrmPrincipal
               E577FFFBE377FFFAE26AFFFFDF08000000000000000000000000000000000000
               000000000000}
             ParentFont = False
+            OnClick = sbSalvarClick
             ExplicitLeft = 342
             ExplicitTop = 6
           end
