@@ -40,9 +40,9 @@ begin
   BancoInter := TBancoInter.Create(Self);
   BancoInter.CertFile := ExtractFilePath(ParamStr(0)) + 'certificado.crt';
   BancoInter.KeyFile := ExtractFilePath(ParamStr(0)) + 'chave.key';
-  BancoInter.ClientID := 'e9f9df86-3478-47c0-b720-30e6c373b85d';
-  BancoInter.ClientSecret := '040ba175-76ea-40d9-9375-0dd093a77624';
-  BancoInter.Scope := 'extrato.read boleto-cobranca.read boleto-cobranca.write';
+  BancoInter.ClientID := '';
+  BancoInter.ClientSecret := '';
+  BancoInter.Scope := 'extrato.read boleto-cobranca.read boleto-cobranca.write';// conforme permissão de uso da API
 end;
 
 procedure TFrmPrincipal.FormDestroy(Sender: TObject);
