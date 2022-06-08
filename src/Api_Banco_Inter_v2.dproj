@@ -83,7 +83,7 @@
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
-        <DCC_ExeOutput>bin</DCC_ExeOutput>
+        <DCC_ExeOutput>.\bin</DCC_ExeOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
@@ -96,7 +96,7 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
-        <DCC_ExeOutput>bin</DCC_ExeOutput>
+        <DCC_ExeOutput>.\bin</DCC_ExeOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
@@ -104,7 +104,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="uFrmPrincipal.pas">
+        <DCCReference Include="Principal\uFrmPrincipal.pas">
             <Form>FrmPrincipal</Form>
             <FormType>dfm</FormType>
         </DCCReference>
@@ -129,6 +129,9 @@
                 <Source>
                     <Source Name="MainSource">Api_Banco_Inter_v2.dpr</Source>
                 </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclcxSchedulerTreeBrowserRS26.bpl">ExpressScheduler tree browser by Developer Express Inc.</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
                 <DeployFile LocalName="Win32\Debug\Api_Banco_Inter_v2.exe" Configuration="Debug" Class="ProjectOutput">

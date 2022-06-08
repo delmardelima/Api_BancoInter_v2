@@ -1,3 +1,19 @@
+{ *****************************************************************
+  *****************************************************************
+  ** Neste projeto é apresentado como consumir a API v2 do       **
+  ** Banco Inter com autenticação OAUTH 2.0, utilizando o Delphi **
+  ** e o componente Indy. Compatibilidade testada na versão do   **
+  ** Delphi Rio, mas poderá funcionar em versão diferente.       **
+  ** Desenvolvido por Delmar de Lima (CortesDEV).                **
+  *****************************************************************
+  ** Segue CortesDEV nas redes sociais                           **
+  ** Youtube:   https://bit.ly/SeguirCortesDev                   **
+  ** Instagram: https://www.instagram.com/cortesdevoficial/      **
+  ** Facebook:  https://www.fb.com/cortesdevoficial              **
+  ** WhatsApp:  https://wa.me/5597991442486                      **
+  ** Site:      https://amil.cnt.br/cortesdev                    **
+  *****************************************************************
+  ***************************************************************** }
 unit uClasseBancoInter;
 
 interface
@@ -5,7 +21,7 @@ interface
 uses
   System.Classes, System.JSON, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
   IdSSL, IdSSLOpenSSL, IdBaseComponent, IdComponent, IdTCPConnection,
-  IdTCPClient, System.SysUtils,
+  IdTCPClient, System.SysUtils, System.DateUtils,
   IdHTTP;
 
 type
@@ -18,6 +34,8 @@ type
     FClientID: String;
     FClientSecret: String;
     FScope: String;
+    FToken: String;
+    FTokenTime: TDateTime;
     FSeuNumero: String;
     FNossoNumero: String;
     FCodigoBarras: String;
@@ -55,6 +73,8 @@ type
     property ClientID: String read FClientID write FClientID;
     property ClientSecret: String read FClientSecret write FClientSecret;
     property Scope: String read FScope write FScope;
+    property Token: String read FToken write FToken;
+    property TokenTime: TDateTime read FTokenTime write FTokenTime;
     property SeuNumero: String read FSeuNumero write FSeuNumero;
     property NossoNumero: String read FNossoNumero write FNossoNumero;
     property CodigoBarras: String read FCodigoBarras write FCodigoBarras;
@@ -80,7 +100,7 @@ type
     property TaxaDesconto: Double read FTaxaDesconto write FTaxaDesconto;
     property DtMulta: TDate read FDtMulta write FDtMulta;
 
-    function GetToken: String;
+    procedure GetToken;
     procedure PostBoleto;
   end;
 
@@ -104,7 +124,7 @@ begin
   inherited Destroy;
 end;
 
-function TBancoInter.GetToken: String;
+procedure TBancoInter.GetToken;
 var
   Params: TStringList;
   Resp: TStringStream;
@@ -147,7 +167,8 @@ begin
           for JsoPair in Jso do
           begin
             if JsoPair.JsonString.value = 'access_token' then
-              Result := JsoPair.JsonValue.value;
+              Token := JsoPair.JsonValue.value;
+            TokenTime := IncSecond(now, 3600);
           end;
 
           Jso.Free;
@@ -191,82 +212,94 @@ var
   JsoPair: TJSONPair;
   Parametros: String;
 begin
-  ListParams := TStringList.Create;
-  Resp := TStringStream.Create;
-
-  HTTP := TIdHTTP.Create(nil);
-  HTTP.Request.BasicAuthentication := False;
-  HTTP.Request.UserAgent :=
-    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0';
-  IOHandle := TIdSSLIOHandlerSocketOpenSSL.Create(HTTP);
-  IOHandle.SSLOptions.Method := sslvTLSv1_2;
-  IOHandle.SSLOptions.Mode := sslmClient;
-  IOHandle.SSLOptions.CertFile := CertFile;
-  IOHandle.SSLOptions.KeyFile := KeyFile;
-  HTTP.IOHandler := IOHandle;
-  HTTP.Request.ContentType := 'application/json';
-  HTTP.Request.Accept := 'application/json';
-  HTTP.Request.CharSet := 'UTF-8';
-  HTTP.Request.CustomHeaders.FoldLines := False;
-  HTTP.Request.CustomHeaders.Add('Authorization: Bearer ' + GetToken);
-
+  if (Token = '') or (TokenTime <= now) then
+  begin
+    GravarLog('Error: Token OAuth não gerado ou venceu!');
+    Abort;
+  end;
   try
-    Parametros := '{' + '"seuNumero": "' + SeuNumero + '",' + '"valorNominal": '
-      + FormatFloat('0', ValorNominal) + ', "valorAbatimento": 0,' +
-      '"dataVencimento": "' + FormatDateTime('yyyy-mm-dd', DataVencimento) +
-      '",' + '"numDiasAgenda": 60,' + '"pagador": {' + '"cpfCnpj": "' + CpfCnpj
-      + '",' + '"tipoPessoa": "' + TipoPessoa + '",' + '"nome": "' + Nome + '",'
-      + '"endereco": "' + Endereco + '",' + '"numero": "' + Numero + '",' +
-      '"complemento": "' + Complemento + '",' + '"bairro": "' + Bairro + '",' +
-      '"cidade": "' + Cidade + '",' + '"uf": "' + UF + '",' + '"cep": "' + CEP +
-      '",' + '"email": "' + Email + '",' + '"ddd": "' + DDD + '",' +
-      '"telefone": "' + Telefone + '"},' + '"mensagem": {' + '"linha1": "' +
-      Linha1 + '", "linha2": "' + Linha2 + '", "linha3": "acesse amil.cnt.br"},'
-      + '"desconto1": {' + '"codigoDesconto": "PERCENTUALDATAINFORMADA",' +
-      '"data": "' + FormatDateTime('yyyy-mm-dd', DtDesconto) + '",' + '"taxa": '
-      + FormatFloat('0', TaxaDesconto) + ',' + '"valor": 0},' + '"multa": {' +
-      '"codigoMulta": "PERCENTUAL",' + '"data": "' +
-      FormatDateTime('yyyy-mm-dd', DtMulta) + '",' + '"valor": 0,' +
-      '"taxa": 2},' + '"mora": {' + '"codigoMora": "TAXAMENSAL",' + '"data": "'
-      + FormatDateTime('yyyy-mm-dd', DtMulta) + '",' + '"valor": 0,' +
-      '"taxa": 1' + '}}';
+    ListParams := TStringList.Create;
+    Resp := TStringStream.Create;
 
-    ListParams.text := Parametros;
-    JsonStreamEnvio := TStringStream.Create(ListParams.text);
-    HTTP.Post(URI_BOLETOS, JsonStreamEnvio, Resp);
+    HTTP := TIdHTTP.Create(nil);
+    HTTP.Request.BasicAuthentication := False;
+    HTTP.Request.UserAgent :=
+      'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0';
+    IOHandle := TIdSSLIOHandlerSocketOpenSSL.Create(HTTP);
+    IOHandle.SSLOptions.Method := sslvTLSv1_2;
+    IOHandle.SSLOptions.Mode := sslmClient;
+    IOHandle.SSLOptions.CertFile := CertFile;
+    IOHandle.SSLOptions.KeyFile := KeyFile;
+    HTTP.IOHandler := IOHandle;
+    HTTP.Request.ContentType := 'application/json';
+    HTTP.Request.Accept := 'application/json';
+    HTTP.Request.CharSet := 'UTF-8';
+    HTTP.Request.CustomHeaders.FoldLines := False;
+    HTTP.Request.CustomHeaders.Add('Authorization: Bearer ' + Token);
 
-    if HTTP.ResponseCode = 200 then
-    begin
-      if Resp.DataString <> '' then
+    try
+      Parametros := '{' + '"seuNumero": "' + SeuNumero + '",' +
+        '"valorNominal": ' + FormatFloat('0', ValorNominal) +
+        ', "valorAbatimento": 0,' + '"dataVencimento": "' +
+        FormatDateTime('yyyy-mm-dd', DataVencimento) + '",' +
+        '"numDiasAgenda": 60,' + '"pagador": {' + '"cpfCnpj": "' + CpfCnpj +
+        '",' + '"tipoPessoa": "' + TipoPessoa + '",' + '"nome": "' + Nome + '",'
+        + '"endereco": "' + Endereco + '",' + '"numero": "' + Numero + '",' +
+        '"complemento": "' + Complemento + '",' + '"bairro": "' + Bairro + '",'
+        + '"cidade": "' + Cidade + '",' + '"uf": "' + UF + '",' + '"cep": "' +
+        CEP + '",' + '"email": "' + Email + '",' + '"ddd": "' + DDD + '",' +
+        '"telefone": "' + Telefone + '"},' + '"mensagem": {' + '"linha1": "' +
+        Linha1 + '", "linha2": "' + Linha2 +
+        '", "linha3": "acesse amil.cnt.br"},' + '"desconto1": {' +
+        '"codigoDesconto": "PERCENTUALDATAINFORMADA",' + '"data": "' +
+        FormatDateTime('yyyy-mm-dd', DtDesconto) + '",' + '"taxa": ' +
+        FormatFloat('0', TaxaDesconto) + ',' + '"valor": 0},' + '"multa": {' +
+        '"codigoMulta": "PERCENTUAL",' + '"data": "' +
+        FormatDateTime('yyyy-mm-dd', DtMulta) + '",' + '"valor": 0,' +
+        '"taxa": 2},' + '"mora": {' + '"codigoMora": "TAXAMENSAL",' +
+        '"data": "' + FormatDateTime('yyyy-mm-dd', DtMulta) + '",' +
+        '"valor": 0,' + '"taxa": 1' + '}}';
+
+      ListParams.text := Parametros;
+      JsonStreamEnvio := TStringStream.Create(ListParams.text);
+      HTTP.Post(URI_BOLETOS, JsonStreamEnvio, Resp);
+
+      if HTTP.ResponseCode = 200 then
       begin
-        try
-          Jso := TJSONObject.Create;
-          Jso.Parse(Resp.Bytes, 0);
-          for JsoPair in Jso do
-          begin
-            if JsoPair.JsonString.value = 'seuNumero' then
-              SeuNumero := JsoPair.JsonValue.value
-            else if JsoPair.JsonString.value = 'nossoNumero' then
-              NossoNumero := JsoPair.JsonValue.value
-            else if JsoPair.JsonString.value = 'codigoBarras' then
-              CodigoBarras := JsoPair.JsonValue.value
-            else if JsoPair.JsonString.value = 'linhaDigitavel' then
-              LinhaDigitavel := JsoPair.JsonValue.value;
+        if Resp.DataString <> '' then
+        begin
+          try
+            Jso := TJSONObject.Create;
+            Jso.Parse(Resp.Bytes, 0);
+            for JsoPair in Jso do
+            begin
+              if JsoPair.JsonString.value = 'seuNumero' then
+                SeuNumero := JsoPair.JsonValue.value
+              else if JsoPair.JsonString.value = 'nossoNumero' then
+                NossoNumero := JsoPair.JsonValue.value
+              else if JsoPair.JsonString.value = 'codigoBarras' then
+                CodigoBarras := JsoPair.JsonValue.value
+              else if JsoPair.JsonString.value = 'linhaDigitavel' then
+                LinhaDigitavel := JsoPair.JsonValue.value;
+            end;
+          finally
+            FreeAndNil(Jso);
           end;
-        finally
-          FreeAndNil(Jso);
         end;
-      end;
-    end
-    else
-      GravarLog('Error: ' + IntToStr(HTTP.ResponseCode) + ' - ' +
-        Resp.DataString);
-  finally
-    FreeAndNil(ListParams);
-    FreeAndNil(Resp);
-    FreeAndNil(JsonStreamEnvio);
-    FreeAndNil(IOHandle);
-    FreeAndNil(HTTP);
+      end
+      else
+        GravarLog('Error: ' + IntToStr(HTTP.ResponseCode) + ' - ' +
+          Resp.DataString);
+    finally
+      FreeAndNil(ListParams);
+      FreeAndNil(Resp);
+      FreeAndNil(JsonStreamEnvio);
+      FreeAndNil(IOHandle);
+      FreeAndNil(HTTP);
+    end;
+  except
+    on e: exception do
+      GravarLog('Erro ao enviar boleto: ' + e.Message);
   end;
 end;
 
