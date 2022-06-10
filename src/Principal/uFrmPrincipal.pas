@@ -1,9 +1,9 @@
 { *****************************************************************
   *****************************************************************
-  ** Neste projeto È apresentado como consumir a API v2 do       **
-  ** Banco Inter com autenticaÁ„o OAUTH 2.0, utilizando o Delphi **
-  ** e o componente Indy. Compatibilidade testada na vers„o do   **
-  ** Delphi Rio, mas poder· funcionar em vers„o diferente.       **
+  ** Neste projeto √© apresentado como consumir a API v2 do       **
+  ** Banco Inter com autentica√ß√£o OAUTH 2.0, utilizando o Delphi **
+  ** e o componente Indy. Compatibilidade testada na vers√£o do   **
+  ** Delphi Rio, mas poder√° funcionar em vers√£o diferente.       **
   ** Desenvolvido por Delmar de Lima (CortesDEV).                **
   *****************************************************************
   ** Segue CortesDEV nas redes sociais                           **
@@ -75,7 +75,7 @@ begin
   BancoInter.SeuNumero := edtSeuNumero.Text;
   BancoInter.ValorNominal := 10;
   BancoInter.DataVencimento := incDay(date, 30);
-  // Dados fictÌcios, retirado do site 4devs.com.br/gerador_de_pessoas
+  // Dados fict√≠cios, retirado do site 4devs.com.br/gerador_de_pessoas
   BancoInter.CpfCnpj := '0000000000';
   BancoInter.TipoPessoa := 'FISICA'; // JURIDICA
   BancoInter.Nome := 'DELMAR DE LIMA';
@@ -106,8 +106,8 @@ begin
   BancoInter := TBancoInter.Create(Self);
   BancoInter.CertFile := ExtractFilePath(ParamStr(0)) + 'certificado.crt';
   BancoInter.KeyFile := ExtractFilePath(ParamStr(0)) + 'chave.key';
-  BancoInter.ClientID := 'e9f9df86-3478-47c0-b720-30e6c373b85d';
-  BancoInter.ClientSecret := '040ba175-76ea-40d9-9375-0dd093a77624';
+  BancoInter.ClientID := '';
+  BancoInter.ClientSecret := '';
   BancoInter.Scope := 'extrato.read boleto-cobranca.read boleto-cobranca.write';
 end;
 
