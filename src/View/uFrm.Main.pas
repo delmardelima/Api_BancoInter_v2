@@ -22,7 +22,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  uClasseBancoInter, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL,
+  uController.BancoInter, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL,
   IdSSLOpenSSL, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
   IdHTTP, Vcl.StdCtrls, Vcl.ExtCtrls, DateUtils, ShellApi;
 
