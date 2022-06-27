@@ -94,10 +94,11 @@ begin
   BancoInter.SeuNumero := edtSeuNumero.Text;
   BancoInter.ValorNominal := 10;
   BancoInter.DataVencimento := incDay(date, 30);
+  // Não pode ter acento ou caracteres especiais na solicitação.
   // Dados fictícios, retirado do site 4devs.com.br/gerador_de_pessoas
   BancoInter.CpfCnpj := '96730102268';
   BancoInter.TipoPessoa := 'FISICA'; // JURIDICA
-  BancoInter.Nome := 'Thomas Cláudio Bernardes';
+  BancoInter.Nome := 'Thomas Claudio Bernardes';
   BancoInter.Endereco := 'Avenida 13 de Novembro';
   BancoInter.Numero := '697';
   BancoInter.Complemento := 'Casa';
@@ -122,10 +123,14 @@ end;
 procedure TFrmPrincipal.FormCreate(Sender: TObject);
 begin
   BancoInter := TBancoInter.Create(Self);
+  { ATENÇÃO!!!}
+  { INFORMAÇÕES RETIRADA DA INTERNET BANKING }
+  { NECESSARIO GERAR APLICAÇÃO NO MENU API DO BANCO INTER }
+  { https://ajuda.bancointer.com.br/pt-BR/articles/4284884-como-cadastrar-uma-api }
   BancoInter.CertFile := ExtractFilePath(ParamStr(0)) + 'certificado.crt';
   BancoInter.KeyFile := ExtractFilePath(ParamStr(0)) + 'chave.key';
-  BancoInter.ClientID := 'e9f9df86-3478-47c0-b720-30e6c373b85d';
-  BancoInter.ClientSecret := '040ba175-76ea-40d9-9375-0dd093a77624';
+  BancoInter.ClientID := '';
+  BancoInter.ClientSecret := '';
   BancoInter.Scope := 'extrato.read boleto-cobranca.read boleto-cobranca.write';
 end;
 
