@@ -1,4 +1,4 @@
-﻿{ *****************************************************************
+{ *****************************************************************
   *****************************************************************
   ** Neste projeto é apresentado como consumir a API v2 do       **
   ** Banco Inter com autenticação OAUTH 2.0, utilizando o Delphi **
@@ -52,11 +52,19 @@ type
     Label10: TLabel;
     Label11: TLabel;
     Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
+    Label15: TLabel;
+    edtSituacao: TEdit;
+    Label16: TLabel;
+    edtValorPago: TEdit;
+    btnConsultBoleto: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnGetTokenClick(Sender: TObject);
     procedure btnPostBoletoClick(Sender: TObject);
     procedure btnDownloadPDFClick(Sender: TObject);
+    procedure btnConsultBoletoClick(Sender: TObject);
   private
     { Private declarations }
     BancoInter: TBancoInter;
@@ -70,6 +78,14 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TFrmPrincipal.btnConsultBoletoClick(Sender: TObject);
+begin
+  BancoInter.NossoNumero := edtNossoNumero.Text;
+  BancoInter.ConsultBoleto;
+  edtSituacao.Text := BancoInter.Situacao;
+  edtValorPago.Text := BancoInter.ValorPago;
+end;
 
 procedure TFrmPrincipal.btnDownloadPDFClick(Sender: TObject);
 begin
