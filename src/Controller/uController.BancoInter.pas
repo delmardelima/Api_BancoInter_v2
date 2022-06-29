@@ -14,20 +14,23 @@
   ** Site:      https://amil.cnt.br/cortesdev                    **
   *****************************************************************
   ***************************************************************** }
+
 unit uController.BancoInter;
 
 interface
 
 uses
   System.Classes, System.JSON, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
-  IdSSL, IdSSLOpenSSL, IdBaseComponent, IdComponent, IdTCPConnection,
-  IdTCPClient, System.SysUtils, System.DateUtils, IdHTTP, IdCoderMIME;
+  IdSSL, IdBaseComponent, IdComponent, IdTCPConnection, IdSSLOpenSSL,
+  IdSSLOpenSSLHeaders, IdTCPClient, System.SysUtils, System.DateUtils, IdHTTP,
+  IdCoderMIME;
 
 type
   TBancoInter = class(TComponent)
   private
     FLogFile: String;
     FDirFile: String;
+    FDirBin: String;
     FArqPDF: String;
     FCertFile: String;
     FKeyFile: String;
@@ -60,6 +63,8 @@ type
     FDtDesconto: TDate;
     FTaxaDesconto: Double;
     FDtMulta: TDate;
+    FSituacao: String;
+    FValorPago: Double;
 
     procedure GravarLog(value: String);
   public
@@ -68,6 +73,7 @@ type
 
     property LogFile: String read FLogFile write FLogFile;
     property DirFile: String read FDirFile write FDirFile;
+    property DirBin: String read FDirBin write FDirBin;
     property ArqPDF: String read FArqPDF write FArqPDF;
     property CertFile: String read FCertFile write FCertFile;
     property KeyFile: String read FKeyFile write FKeyFile;
@@ -100,16 +106,20 @@ type
     property DtDesconto: TDate read FDtDesconto write FDtDesconto;
     property TaxaDesconto: Double read FTaxaDesconto write FTaxaDesconto;
     property DtMulta: TDate read FDtMulta write FDtMulta;
+    property Situacao: String read FSituacao write FSituacao;
+    property ValorPago: Double read FValorPago write FValorPago;
 
     procedure GetToken;
     procedure PostBoleto;
     procedure DownloadPDF;
+    procedure ConsultBoleto;
   end;
 
 Const
   URI_TOKEN = 'https://cdpj.partners.bancointer.com.br/oauth/v2/token';
   URI_BOLETOS = 'https://cdpj.partners.bancointer.com.br/cobranca/v2/boletos';
   URI_PDF = 'https://cdpj.partners.bancointer.com.br/cobranca/v2/boletos/';
+  URI_CONSULT = 'https://cdpj.partners.bancointer.com.br/cobranca/v2/boletos/';
 
 implementation
 
@@ -118,10 +128,12 @@ implementation
 constructor TBancoInter.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  DirBin := ExtractFilePath(ParamStr(0));
   LogFile := ChangeFileExt(ParamStr(0), '.log');
   DirFile := ExtractFilePath(ParamStr(0)) + 'Boletos\';
   if Not DirectoryExists(DirFile) then
     ForceDirectories(DirFile);
+  IdSSLOpenSSLHeaders.IdOpenSSLSetLibPath(DirBin);
 end;
 
 destructor TBancoInter.Destroy;
@@ -312,13 +324,16 @@ end;
 procedure TBancoInter.DownloadPDF;
 var
   RespPDF: TStringStream;
+  wJSONObj: TJSONObject;
+  wJSONV: TJSONValue;
+  wPDF, URI_PDF_FINAL: String;
   MStream: TMemoryStream;
   Decoder: TIdDecoderMIME;
   FileDownload: TFileStream;
   HTTPBaixarPDF: TIdHTTP;
   IOHandleBaixarPDF: TIdSSLIOHandlerSocketOpenSSL;
-  URI_PDF_FINAL: String;
 begin
+  { Procedure ajustada por Gabriel SCI }
   if (Token = '') or (TokenTime <= now) then
   begin
     GravarLog('Error: Token OAuth não gerado ou venceu!');
@@ -356,12 +371,21 @@ begin
         if RespPDF.DataString <> '' then
         begin
           try
+            wJSONObj := TJSONObject.Create;
+
+            wJSONV := TJSONObject.ParseJSONValue(RespPDF.DataString);
+            wJSONObj := TJSONObject(wJSONV);
+            wPDF := wJSONObj.GetValue('pdf').value;
+
             Decoder := TIdDecoderMIME.Create(nil);
             MStream := TMemoryStream.Create;
-            Decoder.DecodeStream(RespPDF.DataString, MStream);
+
+            Decoder.DecodeStream(wPDF, MStream);
             ArqPDF := DirFile + NossoNumero + '.pdf';
             MStream.SaveToFile(ArqPDF);
           finally
+            FreeAndNil(wJSONObj);
+            FreeAndNil(wJSONV);
             FreeAndNil(Decoder);
             FreeAndNil(MStream);
           end;
@@ -379,6 +403,66 @@ begin
   except
     on e: exception do
       GravarLog('Erro ao baixar o PDF do boleto inter: ' + e.Message);
+  end;
+end;
+
+procedure TBancoInter.ConsultBoleto;
+var
+  RespConsult: TStringStream;
+  Jso: TJSONObject;
+  JsoPair: TJSONPair;
+  URI_CONSULT_FINAL: String;
+  HTTPConsult: TIdHTTP;
+  IOHandleConsult: TIdSSLIOHandlerSocketOpenSSL;
+begin
+  try
+    RespConsult := TStringStream.Create;
+
+    HTTPConsult := TIdHTTP.Create(nil);
+    HTTPConsult.Request.BasicAuthentication := False;
+    HTTPConsult.Request.UserAgent :=
+      'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0';
+    IOHandleConsult := TIdSSLIOHandlerSocketOpenSSL.Create(HTTPConsult);
+    IOHandleConsult.SSLOptions.Method := sslvTLSv1_2;
+    IOHandleConsult.SSLOptions.Mode := sslmClient;
+    IOHandleConsult.SSLOptions.CertFile := CertFile;
+    IOHandleConsult.SSLOptions.KeyFile := KeyFile;
+    HTTPConsult.IOHandler := IOHandleConsult;
+    HTTPConsult.Request.Accept := 'application/json';
+    HTTPConsult.Request.CustomHeaders.FoldLines := False;
+    HTTPConsult.Request.CustomHeaders.Add('Authorization: Bearer ' + Token);
+
+    try
+      URI_CONSULT_FINAL := URI_CONSULT + NossoNumero;
+      HTTPConsult.Get(URI_CONSULT_FINAL, RespConsult);
+      if HTTPConsult.ResponseCode = 200 then
+      begin
+        Jso := TJSONObject.Create;
+        Jso.Parse(RespConsult.Bytes, 0);
+
+        for JsoPair in Jso do
+        begin
+          if JsoPair.JsonString.value = 'situacao' then
+            Situacao := JsoPair.JsonValue.value;
+          if Situacao = 'PAGO' then
+          begin
+            if JsoPair.JsonString.value = 'valorTotalRecebimento' then
+              ValorPago := JsoPair.JsonValue.GetValue<Double>;
+          end;
+        end;
+      end
+      else
+        GravarLog('Erro: ' + IntToStr(HTTPConsult.ResponseCode) + ' - ' +
+          RespConsult.DataString);
+
+    finally
+      FreeAndNil(RespConsult);
+      FreeAndNil(IOHandleConsult);
+      FreeAndNil(HTTPConsult);
+    end;
+  except
+    on ex: exception do
+      GravarLog('Erro ao consultar boleto: ' + ex.Message);
   end;
 end;
 

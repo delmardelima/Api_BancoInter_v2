@@ -125,6 +125,34 @@ object FrmPrincipal: TFrmPrincipal
     Height = 17
     Caption = 'Terceira Etapa:'
   end
+  object Label13: TLabel
+    Left = 8
+    Top = 289
+    Width = 147
+    Height = 17
+    Caption = 'Procedure ConsultBoleto:'
+  end
+  object Label14: TLabel
+    Left = 496
+    Top = 289
+    Width = 80
+    Height = 17
+    Caption = 'Quarta Etapa:'
+  end
+  object Label15: TLabel
+    Left = 39
+    Top = 318
+    Width = 52
+    Height = 17
+    Caption = 'Situacao:'
+  end
+  object Label16: TLabel
+    Left = 297
+    Top = 318
+    Width = 63
+    Height = 17
+    Caption = 'ValorPago:'
+  end
   object btnGetToken: TButton
     Left = 501
     Top = 35
@@ -202,5 +230,30 @@ object FrmPrincipal: TFrmPrincipal
     Caption = 'DownloadPDF'
     TabOrder = 8
     OnClick = btnDownloadPDFClick
+  end
+  object edtSituacao: TEdit
+    Left = 97
+    Top = 315
+    Width = 168
+    Height = 25
+    Enabled = False
+    TabOrder = 9
+  end
+  object edtValorPago: TEdit
+    Left = 366
+    Top = 315
+    Width = 129
+    Height = 25
+    Enabled = False
+    TabOrder = 10
+  end
+  object btnConsultBoleto: TButton
+    Left = 501
+    Top = 315
+    Width = 75
+    Height = 25
+    Caption = 'Consult'
+    TabOrder = 11
+    OnClick = btnConsultBoletoClick
   end
 end
