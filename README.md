@@ -25,10 +25,10 @@ Sinta-se à vontade para fazer perguntas através do WhatsApp: https://wa.me/559
 ##### [Instagram][]
 ##### [Facebook][] 
 ##### [Codigo Fonte Layout Moderno em Delphi][]
-##### [Site][] <br/>
+##### [Site | CortesDEV][] <br/>
 
 Conheça mais no nosso blog: <br/>
-**[>> CONHEÇA MAIS](https://www.amil.cnt.br/blog)**
+**[>> CONHEÇA MAIS](https://cortesdev.com.br/blog)**
 
 ## Licença
 GNU General Public License v3.0 [GNU General][]
@@ -39,4 +39,4 @@ GNU General Public License v3.0 [GNU General][]
 [Instagram]: https://www.instagram.com/cortesdevoficial/
 [Facebook]: https://www.fb.com/cortesdevoficial
 [Codigo Fonte Layout Moderno em Delphi]: https://bit.ly/LayoutModerno
-[Site]: https://amil.cnt.br/
+[Site | CortesDEV]: https://cortesdev.com.br/

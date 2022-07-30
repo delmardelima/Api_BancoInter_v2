@@ -4,7 +4,7 @@ object FrmPrincipal: TFrmPrincipal
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Exemple Api Banco Inter v2'
-  ClientHeight = 421
+  ClientHeight = 571
   ClientWidth = 594
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -15,6 +15,7 @@ object FrmPrincipal: TFrmPrincipal
   OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 17
   object Label1: TLabel
@@ -153,6 +154,29 @@ object FrmPrincipal: TFrmPrincipal
     Height = 17
     Caption = 'ValorPago:'
   end
+  object Shape3: TShape
+    Left = -5
+    Top = 354
+    Width = 600
+    Height = 1
+    Brush.Style = bsClear
+    Pen.Color = clGray
+  end
+  object Label17: TLabel
+    Left = 8
+    Top = 361
+    Width = 89
+    Height = 17
+    Caption = 'Return / Status:'
+  end
+  object Label18: TLabel
+    Left = 493
+    Top = 361
+    Width = 83
+    Height = 17
+    Caption = 'Clear / Limpar'
+    OnClick = Label18Click
+  end
   object btnGetToken: TButton
     Left = 501
     Top = 35
@@ -255,5 +279,23 @@ object FrmPrincipal: TFrmPrincipal
     Caption = 'Consult'
     TabOrder = 11
     OnClick = btnConsultBoletoClick
+  end
+  object mResult: TMemo
+    Left = 8
+    Top = 384
+    Width = 568
+    Height = 156
+    TabOrder = 12
+  end
+  object LinkLabel1: TLinkLabel
+    Left = 258
+    Top = 546
+    Width = 318
+    Height = 21
+    Caption = 
+      '<a href="https://cortesdev.com.br/">Desenvolvido por: Delmar de ' +
+      'Lima | cortesdev.com.br</a>'
+    TabOrder = 13
+    OnLinkClick = LinkLabel1LinkClick
   end
 end

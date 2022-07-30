@@ -22,7 +22,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  uController.BancoInter, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL,
+  uController.BancoInter, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
+  IdSSL,
   IdSSLOpenSSL, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
   IdHTTP, Vcl.StdCtrls, Vcl.ExtCtrls, DateUtils, ShellApi;
 
@@ -59,12 +60,21 @@ type
     Label16: TLabel;
     edtValorPago: TEdit;
     btnConsultBoleto: TButton;
+    Shape3: TShape;
+    mResult: TMemo;
+    Label17: TLabel;
+    LinkLabel1: TLinkLabel;
+    Label18: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnGetTokenClick(Sender: TObject);
     procedure btnPostBoletoClick(Sender: TObject);
     procedure btnDownloadPDFClick(Sender: TObject);
     procedure btnConsultBoletoClick(Sender: TObject);
+    procedure LinkLabel1LinkClick(Sender: TObject; const Link: string;
+      LinkType: TSysLinkType);
+    procedure FormShow(Sender: TObject);
+    procedure Label18Click(Sender: TObject);
   private
     { Private declarations }
     BancoInter: TBancoInter;
@@ -84,7 +94,7 @@ begin
   BancoInter.NossoNumero := edtNossoNumero.Text;
   BancoInter.ConsultBoleto;
   edtSituacao.Text := BancoInter.Situacao;
-  edtValorPago.Text := BancoInter.ValorPago;
+  edtValorPago.Text := BancoInter.ValorPago.ToString;
 end;
 
 procedure TFrmPrincipal.btnDownloadPDFClick(Sender: TObject);
@@ -100,9 +110,10 @@ end;
 procedure TFrmPrincipal.btnGetTokenClick(Sender: TObject);
 begin
   BancoInter.GetToken;
-  if BancoInter.Token = '' then
-    BancoInter.Token := 'Error GetToken!';
-  edtToken.Text := BancoInter.Token;
+  if Not BancoInter.GetTokenResult then
+    mResult.Lines.Add(BancoInter.GetTokenError)
+  else
+    edtToken.Text := BancoInter.Token;
 end;
 
 procedure TFrmPrincipal.btnPostBoletoClick(Sender: TObject);
@@ -130,16 +141,22 @@ begin
   BancoInter.DtDesconto := incDay(date, 20);
   BancoInter.TaxaDesconto := 1; // 0 -> 100
   BancoInter.PostBoleto;
-  edtSeuNumero.Text := BancoInter.SeuNumero;
-  edtNossoNumero.Text := BancoInter.NossoNumero;
-  edtCodigoBarras.Text := BancoInter.CodigoBarras;
-  edtLinhaDigitavel.Text := BancoInter.LinhaDigitavel;
+  if Not BancoInter.PostBoletoResult then
+    mResult.Lines.Add(BancoInter.PostBoletoError)
+  else
+  begin
+    edtSeuNumero.Text := BancoInter.SeuNumero;
+    edtNossoNumero.Text := BancoInter.NossoNumero;
+    edtCodigoBarras.Text := BancoInter.CodigoBarras;
+    edtLinhaDigitavel.Text := BancoInter.LinhaDigitavel;
+  end;
+
 end;
 
 procedure TFrmPrincipal.FormCreate(Sender: TObject);
 begin
   BancoInter := TBancoInter.Create(Self);
-  { ATENÇÃO!!!}
+  { ATENÇÃO!!! }
   { INFORMAÇÕES RETIRADA DA INTERNET BANKING }
   { NECESSARIO GERAR APLICAÇÃO NO MENU API DO BANCO INTER }
   { https://ajuda.bancointer.com.br/pt-BR/articles/4284884-como-cadastrar-uma-api }
@@ -153,6 +170,47 @@ end;
 procedure TFrmPrincipal.FormDestroy(Sender: TObject);
 begin
   BancoInter.Free;
+end;
+
+procedure TFrmPrincipal.FormShow(Sender: TObject);
+begin
+  mResult.Lines.Add('segue @cortesdevoficial | acesse cortesdev.com.br');
+  mResult.Lines.Add
+    ('-----------------------------------------------------------------------');
+  if FileExists(BancoInter.CertFile) then
+    mResult.Lines.Add('Local CertFile: ' + BancoInter.CertFile)
+  else
+    mResult.Lines.Add('Arquivo CertFile não existe!');
+  if FileExists(BancoInter.KeyFile) then
+    mResult.Lines.Add('Local KeyFile: ' + BancoInter.KeyFile)
+  else
+    mResult.Lines.Add('Arquivo KeyFile não existe!');
+  if BancoInter.ClientID <> '' then
+    mResult.Lines.Add('ClientID: ' + BancoInter.ClientID)
+  else
+    mResult.Lines.Add('ClientID não informado!');
+  if BancoInter.ClientSecret <> '' then
+    mResult.Lines.Add('ClientSecret: ' + BancoInter.ClientSecret)
+  else
+    mResult.Lines.Add('ClientSecret não informado!');
+  if BancoInter.Scope <> '' then
+    mResult.Lines.Add('Scope: ' + BancoInter.Scope)
+  else
+    mResult.Lines.Add('Scope não informado!');
+  mResult.Lines.Add
+    ('-----------------------------------------------------------------------');
+
+end;
+
+procedure TFrmPrincipal.Label18Click(Sender: TObject);
+begin
+  mResult.Lines.Clear;
+end;
+
+procedure TFrmPrincipal.LinkLabel1LinkClick(Sender: TObject; const Link: string;
+  LinkType: TSysLinkType);
+begin
+  ShellExecute(0, nil, PChar(Link), nil, nil, 1);
 end;
 
 end.

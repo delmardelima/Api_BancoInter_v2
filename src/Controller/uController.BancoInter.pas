@@ -65,6 +65,12 @@ type
     FDtMulta: TDate;
     FSituacao: String;
     FValorPago: Double;
+    FGetTokenResult: Boolean;
+    FGetTokenError: String;
+    FPostBoletoError: String;
+    FPostBoletoResult: Boolean;
+    FDownloadPDFError: String;
+    FDownloadPDFResult: Boolean;
 
     procedure GravarLog(value: String);
   public
@@ -108,6 +114,16 @@ type
     property DtMulta: TDate read FDtMulta write FDtMulta;
     property Situacao: String read FSituacao write FSituacao;
     property ValorPago: Double read FValorPago write FValorPago;
+    property GetTokenResult: Boolean read FGetTokenResult write FGetTokenResult;
+    property GetTokenError: String read FGetTokenError write FGetTokenError;
+    property PostBoletoResult: Boolean read FPostBoletoResult
+      write FPostBoletoResult;
+    property PostBoletoError: String read FPostBoletoError
+      write FPostBoletoError; // DownloadPDF
+    property DownloadPDFResult: Boolean read FDownloadPDFResult
+      write FDownloadPDFResult;
+    property DownloadPDFError: String read FDownloadPDFError
+      write FDownloadPDFError;
 
     procedure GetToken;
     procedure PostBoleto;
@@ -167,17 +183,19 @@ begin
     HTTP.Request.ContentType := 'application/x-www-form-urlencoded';
     HTTP.Request.CharSet := 'UTF-8';
 
-    try
-      Params.Add('client_id=' + ClientID);
-      Params.Add('client_secret=' + ClientSecret);
-      Params.Add('scope=' + Scope);
-      Params.Add('grant_type=client_credentials');
+    Params.Add('client_id=' + ClientID);
+    Params.Add('client_secret=' + ClientSecret);
+    Params.Add('scope=' + Scope);
+    Params.Add('grant_type=client_credentials');
 
+    try
       HTTP.Post(URI_TOKEN, Params, Resp);
+
       if HTTP.ResponseCode = 200 then
       begin
-        if Resp.DataString <> '' then
-        begin
+        GetTokenResult := true;
+
+        try
           Jso := TJSONObject.Create;
           Jso.Parse(Resp.Bytes, 0);
 
@@ -187,22 +205,19 @@ begin
               Token := JsoPair.JsonValue.value;
             TokenTime := IncSecond(now, 3600);
           end;
-
-          Jso.Free;
+        finally
+          FreeAndNil(Jso);
         end;
       end
       else
-      begin
-        GravarLog('Error: ' + IntToStr(HTTP.ResponseCode) + ' - ' +
-          Resp.DataString);
-      end;
-    finally
-      FreeAndNil(Params);
-      FreeAndNil(Resp);
+        GetTokenError := 'Error: ' + HTTP.ResponseText;
+    except
+      on e: EIdHTTPProtocolException do
+        GetTokenError := 'Error: ' + HTTP.ResponseText + ' - ' + e.ErrorMessage;
     end;
-  except
-    on e: exception do
-      GravarLog('Erro ao gerar token: ' + e.Message);
+  finally
+    FreeAndNil(Params);
+    FreeAndNil(Resp);
   end;
 end;
 
@@ -231,8 +246,13 @@ var
 begin
   if (Token = '') or (TokenTime <= now) then
   begin
-    GravarLog('Error: Token OAuth não gerado ou venceu!');
-    Abort;
+    PostBoletoError := 'Error: Token OAuth não gerado ou venceu!';
+    exit;
+  end;
+  if (seuNumero = '') or (valorNominal <= 0) or (dataVencimento < date) then
+  begin
+    PostBoletoError := 'Error: Informe todos os campos obrigatorios!';
+    exit;
   end;
   try
     ListParams := TStringList.Create;
@@ -254,70 +274,67 @@ begin
     HTTP.Request.CustomHeaders.FoldLines := False;
     HTTP.Request.CustomHeaders.Add('Authorization: Bearer ' + Token);
 
-    try
-      Parametros := '{' + '"seuNumero": "' + SeuNumero + '",' +
-        '"valorNominal": ' + FormatFloat('0', ValorNominal) +
-        ', "valorAbatimento": 0,' + '"dataVencimento": "' +
-        FormatDateTime('yyyy-mm-dd', DataVencimento) + '",' +
-        '"numDiasAgenda": 60,' + '"pagador": {' + '"cpfCnpj": "' + CpfCnpj +
-        '",' + '"tipoPessoa": "' + TipoPessoa + '",' + '"nome": "' + Nome + '",'
-        + '"endereco": "' + Endereco + '",' + '"numero": "' + Numero + '",' +
-        '"complemento": "' + Complemento + '",' + '"bairro": "' + Bairro + '",'
-        + '"cidade": "' + Cidade + '",' + '"uf": "' + UF + '",' + '"cep": "' +
-        CEP + '",' + '"email": "' + Email + '",' + '"ddd": "' + DDD + '",' +
-        '"telefone": "' + Telefone + '"},' + '"mensagem": {' + '"linha1": "' +
-        Linha1 + '", "linha2": "' + Linha2 +
-        '", "linha3": "Tecnologia Amil Contabilidade LTDA"},' + '"desconto1": {'
-        + '"codigoDesconto": "PERCENTUALDATAINFORMADA",' + '"data": "' +
-        FormatDateTime('yyyy-mm-dd', DtDesconto) + '",' + '"taxa": ' +
-        FormatFloat('0', TaxaDesconto) + ',' + '"valor": 0},' + '"multa": {' +
-        '"codigoMulta": "PERCENTUAL",' + '"data": "' +
-        FormatDateTime('yyyy-mm-dd', IncDay(DataVencimento)) + '",' +
-        '"valor": 0,' + '"taxa": 2},' + '"mora": {' +
-        '"codigoMora": "TAXAMENSAL",' + '"data": "' +
-        FormatDateTime('yyyy-mm-dd', IncDay(DataVencimento)) + '",' +
-        '"valor": 0,' + '"taxa": 1' + '}}';
+    Parametros := '{' + '"seuNumero": "' + SeuNumero + '",' + '"valorNominal": '
+      + FormatFloat('0', ValorNominal) + ', "valorAbatimento": 0,' +
+      '"dataVencimento": "' + FormatDateTime('yyyy-mm-dd', DataVencimento) +
+      '",' + '"numDiasAgenda": 60,' + '"pagador": {' + '"cpfCnpj": "' + CpfCnpj
+      + '",' + '"tipoPessoa": "' + TipoPessoa + '",' + '"nome": "' + Nome + '",'
+      + '"endereco": "' + Endereco + '",' + '"numero": "' + Numero + '",' +
+      '"complemento": "' + Complemento + '",' + '"bairro": "' + Bairro + '",' +
+      '"cidade": "' + Cidade + '",' + '"uf": "' + UF + '",' + '"cep": "' + CEP +
+      '",' + '"email": "' + Email + '",' + '"ddd": "' + DDD + '",' +
+      '"telefone": "' + Telefone + '"},' + '"mensagem": {' + '"linha1": "' +
+      Linha1 + '", "linha2": "' + Linha2 +
+      '", "linha3": "Tecnologia Amil Contabilidade LTDA"},' + '"desconto1": {' +
+      '"codigoDesconto": "PERCENTUALDATAINFORMADA",' + '"data": "' +
+      FormatDateTime('yyyy-mm-dd', DtDesconto) + '",' + '"taxa": ' +
+      FormatFloat('0', TaxaDesconto) + ',' + '"valor": 0},' + '"multa": {' +
+      '"codigoMulta": "PERCENTUAL",' + '"data": "' +
+      FormatDateTime('yyyy-mm-dd', IncDay(DataVencimento)) + '",' +
+      '"valor": 0,' + '"taxa": 2},' + '"mora": {' +
+      '"codigoMora": "TAXAMENSAL",' + '"data": "' + FormatDateTime('yyyy-mm-dd',
+      IncDay(DataVencimento)) + '",' + '"valor": 0,' + '"taxa": 1' + '}}';
 
-      ListParams.text := Parametros;
-      JsonStreamEnvio := TStringStream.Create(ListParams.text);
+    ListParams.text := Parametros;
+    JsonStreamEnvio := TStringStream.Create(ListParams.text);
+    try
       HTTP.Post(URI_BOLETOS, JsonStreamEnvio, Resp);
 
       if HTTP.ResponseCode = 200 then
       begin
-        if Resp.DataString <> '' then
-        begin
-          try
-            Jso := TJSONObject.Create;
-            Jso.Parse(Resp.Bytes, 0);
-            for JsoPair in Jso do
-            begin
-              if JsoPair.JsonString.value = 'seuNumero' then
-                SeuNumero := JsoPair.JsonValue.value
-              else if JsoPair.JsonString.value = 'nossoNumero' then
-                NossoNumero := JsoPair.JsonValue.value
-              else if JsoPair.JsonString.value = 'codigoBarras' then
-                CodigoBarras := JsoPair.JsonValue.value
-              else if JsoPair.JsonString.value = 'linhaDigitavel' then
-                LinhaDigitavel := JsoPair.JsonValue.value;
-            end;
-          finally
-            FreeAndNil(Jso);
+        PostBoletoResult := true;
+        try
+          Jso := TJSONObject.Create;
+          Jso.Parse(Resp.Bytes, 0);
+          for JsoPair in Jso do
+          begin
+            if JsoPair.JsonString.value = 'seuNumero' then
+              SeuNumero := JsoPair.JsonValue.value
+            else if JsoPair.JsonString.value = 'nossoNumero' then
+              NossoNumero := JsoPair.JsonValue.value
+            else if JsoPair.JsonString.value = 'codigoBarras' then
+              CodigoBarras := JsoPair.JsonValue.value
+            else if JsoPair.JsonString.value = 'linhaDigitavel' then
+              LinhaDigitavel := JsoPair.JsonValue.value;
           end;
+        finally
+          FreeAndNil(Jso);
         end;
       end
       else
-        GravarLog('Error: ' + IntToStr(HTTP.ResponseCode) + ' - ' +
-          Resp.DataString);
-    finally
-      FreeAndNil(ListParams);
-      FreeAndNil(Resp);
-      FreeAndNil(JsonStreamEnvio);
-      FreeAndNil(IOHandle);
-      FreeAndNil(HTTP);
+        PostBoletoError := 'Error: ' + IntToStr(HTTP.ResponseCode) + ' - ' +
+          Resp.DataString;
+    except
+      on e: EIdHTTPProtocolException do
+        PostBoletoError := 'Error: ' + HTTP.ResponseText + ' - ' +
+          e.ErrorMessage;
     end;
-  except
-    on e: exception do
-      GravarLog('Erro ao enviar boleto: ' + e.Message);
+  finally
+    FreeAndNil(ListParams);
+    FreeAndNil(Resp);
+    FreeAndNil(JsonStreamEnvio);
+    FreeAndNil(IOHandle);
+    FreeAndNil(HTTP);
   end;
 end;
 
@@ -333,16 +350,15 @@ var
   HTTPBaixarPDF: TIdHTTP;
   IOHandleBaixarPDF: TIdSSLIOHandlerSocketOpenSSL;
 begin
-  { Procedure ajustada por Gabriel SCI }
   if (Token = '') or (TokenTime <= now) then
   begin
-    GravarLog('Error: Token OAuth não gerado ou venceu!');
-    Abort;
+    DownloadPDFError := 'Error: Token OAuth não gerado ou venceu!';
+    exit;
   end;
   if (NossoNumero = '') then
   begin
-    GravarLog('Error: NossoNumero não informado!');
-    Abort;
+    DownloadPDFError := 'Error: NossoNumero não informado!';
+    exit;
   end;
   try
     RespPDF := TStringStream.Create;
@@ -368,41 +384,39 @@ begin
 
       if HTTPBaixarPDF.ResponseCode = 200 then
       begin
-        if RespPDF.DataString <> '' then
-        begin
-          try
-            wJSONObj := TJSONObject.Create;
+        DownloadPDFResult := true;
+        try
+          wJSONObj := TJSONObject.Create;
 
-            wJSONV := TJSONObject.ParseJSONValue(RespPDF.DataString);
-            wJSONObj := TJSONObject(wJSONV);
-            wPDF := wJSONObj.GetValue('pdf').value;
+          wJSONV := TJSONObject.ParseJSONValue(RespPDF.DataString);
+          wJSONObj := TJSONObject(wJSONV);
+          wPDF := wJSONObj.GetValue('pdf').value;
 
-            Decoder := TIdDecoderMIME.Create(nil);
-            MStream := TMemoryStream.Create;
+          Decoder := TIdDecoderMIME.Create(nil);
+          MStream := TMemoryStream.Create;
 
-            Decoder.DecodeStream(wPDF, MStream);
-            ArqPDF := DirFile + NossoNumero + '.pdf';
-            MStream.SaveToFile(ArqPDF);
-          finally
-            FreeAndNil(wJSONObj);
-            FreeAndNil(wJSONV);
-            FreeAndNil(Decoder);
-            FreeAndNil(MStream);
-          end;
+          Decoder.DecodeStream(wPDF, MStream);
+          ArqPDF := DirFile + NossoNumero + '.pdf';
+          MStream.SaveToFile(ArqPDF);
+        finally
+          FreeAndNil(wJSONObj);
+          FreeAndNil(wJSONV);
+          FreeAndNil(Decoder);
+          FreeAndNil(MStream);
         end;
       end
       else
-        GravarLog('Error: ' + IntToStr(HTTPBaixarPDF.ResponseCode) + ' - ' +
-          RespPDF.DataString);
-
-    finally
-      FreeAndNil(RespPDF);
-      FreeAndNil(IOHandleBaixarPDF);
-      FreeAndNil(HTTPBaixarPDF);
+        DownloadPDFError := 'Error: ' + IntToStr(HTTPBaixarPDF.ResponseCode) +
+          ' - ' + RespPDF.DataString;
+    except
+      on e: EIdHTTPProtocolException do
+        DownloadPDFError := 'Error: ' + HTTPBaixarPDF.ResponseText + ' - ' +
+          e.ErrorMessage;
     end;
-  except
-    on e: exception do
-      GravarLog('Erro ao baixar o PDF do boleto inter: ' + e.Message);
+  finally
+    FreeAndNil(RespPDF);
+    FreeAndNil(IOHandleBaixarPDF);
+    FreeAndNil(HTTPBaixarPDF);
   end;
 end;
 
